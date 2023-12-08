@@ -21,9 +21,11 @@ import skyrpg.Ability.Abilities.Dash;
 import skyrpg.Ability.Abilities.Deflect;
 import skyrpg.Ability.Abilities.DoubleJump;
 import skyrpg.Ability.Abilities.Experienced;
+import skyrpg.Ability.Abilities.FarmSprint;
 import skyrpg.Ability.Abilities.GoldDigger;
 import skyrpg.Ability.Abilities.MeleeTechnique;
 import skyrpg.Ability.Abilities.TheLuckyOne;
+import skyrpg.Ability.Abilities.Vitality;
 
 /*
  * leveling java plugin
@@ -32,7 +34,7 @@ public class Plugin extends JavaPlugin
 {
   PlayerEventListener PlEvL;
   private static final Logger LOGGER=Logger.getLogger("leveling");
-  Dictionary<String,PlayerProfile> profiles;
+  public Dictionary<String,PlayerProfile> profiles;
 
   protected PluginSaver pluginSaver;
 
@@ -64,11 +66,14 @@ public class Plugin extends JavaPlugin
     LOGGER.info("[SkyRPG - leveling]: Abilities init...");
     abilityList = new ArrayList<>();
     
+    abilityList.add(new Vitality());
     abilityList.add(new Dash());
     abilityList.add(new DoubleJump());
 
     abilityList.add(new MeleeTechnique());
     abilityList.add(new Deflect());
+
+    abilityList.add(new FarmSprint(this));
 
     abilityList.add(new GoldDigger());
 
@@ -102,8 +107,11 @@ public class Plugin extends JavaPlugin
       profile = (PlayerProfile)opp;
       profile.plugin = this;
       profile.player = p;
+      profile.playerName = profile.player.getName();
       //profile.abilities = new ArrayList<>();
       profile.AbilitiesInit();
+      profile.ClearEffects();
+      profile.EffectsSecondPass();
       Bukkit.getServer().broadcastMessage(ChatColor.DARK_PURPLE+"Welcome back, "+ChatColor.WHITE+p.getName());
     }
 
@@ -117,6 +125,7 @@ public class Plugin extends JavaPlugin
     Bukkit.getServer().broadcastMessage("Player quit!");
     Player p = event.getPlayer();
     PlayerProfile profile = profiles.get(p.getName());
+    profile.ClearEffects();
     profile.SaveAbilitiesToDic();
 
     pluginSaver.save(profile, new File(pluginSaver.profilesDir+"/"+p.getName()+".dat"));

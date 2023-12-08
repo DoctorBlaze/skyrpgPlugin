@@ -20,7 +20,7 @@ public class Dash extends AbilityGlobal {
         desc.add(ChatColor.GRAY+"");
 
         skillType = SkillType.general;
-        neededLevel = 2;
+        neededLevel = 3;
 
         fullCooldown = 30;
 

@@ -20,7 +20,7 @@ public class DoubleJump extends AbilityGlobal {
         desc.add(ChatColor.GRAY+"");
 
         skillType = SkillType.general;
-        neededLevel = 3;
+        neededLevel = 4;
 
         fullCooldown = 60;
 

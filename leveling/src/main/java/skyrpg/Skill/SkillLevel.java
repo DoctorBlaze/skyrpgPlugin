@@ -63,13 +63,13 @@ public class SkillLevel implements Serializable {
 
     public List<String> GetListInfo(){
         List<String> ret = new ArrayList<String>();
-
+        ret.add(ChatColor.DARK_GRAY+"___________________");
         ret.add(ChatColor.WHITE+"level: " + String.valueOf(level));
         ret.add(ChatColor.GRAY+"" + String.valueOf(score) + "/" + String.valueOf(GetNeededScore())+"");
 
         String a = "";
-        for(int i = 0; i < 10; ++i){
-            if(score*100/GetNeededScore() > i*10){
+        for(int i = 0; i < 20; ++i){
+            if(score*20/GetNeededScore() > i){
                 a+=ChatColor.GREEN+"▬";
             }
             else{

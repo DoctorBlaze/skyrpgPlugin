@@ -25,7 +25,7 @@ public class AbilityPlayer {
     }
 
     public void UseAbility(Player player){
-        if(level <= 0 || cooldown) return;
+        if((level <= 0 || cooldown) && !ability.autocastAbility) return;
         cooldown = true;
         new BukkitRunnable(){public void run(){cooldown=false;}}.runTaskLater(owner.plugin, ability.fullCooldown);
         ability.UseAbility(player, level);

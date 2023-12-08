@@ -3,6 +3,7 @@ package skyrpg;
 import skyrpg.Ability.AbilityGlobal;
 import skyrpg.Ability.AbilityPlayer;
 import skyrpg.Ability.Abilities.Dash;
+import skyrpg.Effect.SEffect;
 import skyrpg.Skill.*;
 
 import java.io.File;
@@ -20,6 +21,7 @@ import org.bukkit.event.block.CauldronLevelChangeEvent.ChangeReason;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -32,7 +34,9 @@ public class PlayerProfile implements Serializable{
     transient public Player player;
     transient public String playerName;
 
-    public Dictionary<String,Integer> abilitySavedLevels; 
+    public Dictionary<String,Integer> abilitySavedLevels;
+
+    transient public List<SEffect> effects;
     
     SkillType displayedSkill = SkillType.general;
 
@@ -49,6 +53,8 @@ public class PlayerProfile implements Serializable{
         
         AbilitiesInit();
 
+        effects = new ArrayList<>();
+        EffectsSecondPass();
         //plugin.getLogger().info(playerName);
         //plugin.getLogger().info(combatLevel.GetInfo());
     }
@@ -106,9 +112,12 @@ public class PlayerProfile implements Serializable{
 
         ItemStack general_item = new ItemStack(Material.GOLDEN_APPLE);
         ItemMeta general_meta = general_item.getItemMeta();
-        general_meta.setDisplayName(ChatColor.WHITE + "General");
+        general_meta.setDisplayName(ChatColor.GOLD + "General");
+        List<String> generalDesc = new ArrayList<>();
+        generalDesc.add(ChatColor.GRAY+"Summ of all skill levels");
+        generalDesc.add(ChatColor.GRAY+"Level: "+ChatColor.WHITE+generalLevel);
         
-        general_meta.setLore(null);
+        general_meta.setLore(generalDesc);
         general_item.setItemMeta(general_meta);
 
 
@@ -236,6 +245,7 @@ public class PlayerProfile implements Serializable{
             Bukkit.getServer().broadcastMessage("A: "+ag.name+" "+ag.toString());
             
         }
+        UpdateAutocastAbilities();
     }
 
     public void UpgradeAbility(String abilityName){
@@ -248,6 +258,7 @@ public class PlayerProfile implements Serializable{
                 if(abilityPoints >= cost){  
                     if(a.UpgradeAbility()){
                         abilityPoints-=cost;
+                        if(a.ability.autocastAbility) UpdateAutocastAbilities();
                     }
                 }
                 break;
@@ -290,4 +301,53 @@ public class PlayerProfile implements Serializable{
     }
 
 
+    public void UpdateAutocastAbilities(){
+        for (AbilityPlayer a : abilities) {
+            if (a.ability.autocastAbility) {a.UseAbility(player); a.cooldown = false;}
+        }
+    }
+
+
+    // EFFECTS -----------------------------------------------------------------------
+    public void EffectsSecondPass(){
+        for(int i = 0; i < effects.size(); ++i) {
+            effects.get(i).duration--;
+            effects.get(i).OnSecondPass(this);
+            //Bukkit.getServer().broadcastMessage(effects.get(i).name + "has seconds left:" +  effects.get(i).duration);
+            if(effects.get(i).duration <= 0){effects.get(i).OnDisable(this); effects.remove(i); break;}
+        }
+        new BukkitRunnable(){public void run(){EffectsSecondPass();}}.runTaskLater(plugin, 20);
+        //if(effects.get(0) != null) 
+    }
+
+    public SEffect SearchForEffect(String name){
+        for (SEffect e : effects) {
+            if(e.name.equalsIgnoreCase(name)) return e;
+        }
+        return null;
+    }
+
+    public void ApplyEffect(SEffect e){
+        SEffect prevEffect = SearchForEffect(e.name);
+        if(prevEffect != null){ //exists
+            if (prevEffect.level > e.level || //previous effect has higher level
+                prevEffect.level == e.level && prevEffect.duration >= e.duration)  //levels same but previous effect has more duration
+                return;
+            for(int i = 0; i < effects.size(); ++i) if(effects.get(i).name == prevEffect.name){effects.get(i).OnDisable(this); effects.remove(i); break;}
+        }
+        effects.add(e);
+        e.OnEnable(this);
+    }
+
+    public void ClearEffects(){
+        if(effects != null){
+            for (SEffect e : effects) {
+                e.OnDisable(this);
+            }
+            effects.clear();
+        }
+        
+        effects = new ArrayList<>();
+    }
+    
 }

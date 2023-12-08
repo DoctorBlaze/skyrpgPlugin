@@ -17,7 +17,7 @@ public class MeleeTechnique extends AbilityGlobal {
         desc.add(ChatColor.GRAY+"");
 
         skillType = SkillType.combat;
-        neededLevel = 5;
+        neededLevel = 4;
 
         fullCooldown = 0;
 
